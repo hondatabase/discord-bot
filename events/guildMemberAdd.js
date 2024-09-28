@@ -23,7 +23,7 @@ module.exports = {
         }
         
         const staffChannel = guild.channels.cache.get(STAFF_CHANNEL_ID);
-        if (staffChannel) staffChannel.send(`👥 **New member** 👥\nUsername: **${username}**\nInvited by: **${inviter}**`);
+        if (staffChannel) staffChannel.send(`👥 **New member** 👥\nUser: **${user}**\nInvited by: **${inviter}**`);
 
         // Read blacklisted users from file
         const blacklisted = await getBlacklist();
@@ -33,7 +33,7 @@ module.exports = {
             member.timeout(24 * 60 * 60 * 1000, reason).then(() => console.log(`Timed out ${username} for 24 hours`)).catch(console.error);
 
             if (staffChannel)
-                staffChannel.send(`⚠️ **Alert** ⚠️\nUser **${username}** has been timed out for 24 hours. Reason: ${reason}`);
+                staffChannel.send(`⚠️ **Alert** ⚠️\nUser **${user}** has been timed out for 24 hours. Reason: ${reason}`);
             else
                 console.error('Admin channel not found');
         }

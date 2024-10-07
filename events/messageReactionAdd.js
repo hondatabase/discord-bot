@@ -33,6 +33,25 @@ module.exports = {
                 } catch (error) {
                     console.error('Error updating article likes:', error);
                 }
+
+                // Edit the "Top Articles" message, with the current top 5 articles
+                const topArticlesMessage = await reaction.message.channel.messages.fetch(process.env.ARTICLE_REQUEST_CHANNEL_TOPARTICLES_MESSAGE_ID);
+                if (topArticlesMessage) {
+                    try {
+                        const data = await fs
+                            .readFile(filePath, 'utf8')
+                            .catch(() => '[]');
+                        const articles = JSON.parse(data);
+                        const topArticles = articles
+                            .filter(a => a.active)
+                            .sort((a, b) => b.likes - a.likes)
+                            .slice(0, 5)
+                            .map(a => `• '${a.description}' (${a.likes} likes)`);
+                        await topArticlesMessage.edit(`📚 **Top Articles** 📚\n${topArticles.join('\n')}\n\nUpdated: ${new Date().toLocaleString()} GMT`);
+                    } catch (error) {
+                        console.error('Error updating top articles:', error);
+                    }
+                }
             } else {
                 try {
                     await reaction.remove();

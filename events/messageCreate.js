@@ -2,16 +2,17 @@ const moment = require('moment-timezone');
 const { PermissionFlagsBits } = require('discord.js');
 
 const { getUserTimezone } = require('../handlers/TimezoneHandler');
-const { STAFF_CHANNEL_ID } = require('../config');
+const { STAFF_CHANNEL_ID, STAFF_ROLE_ID } = require('../config');
 const INVITE_LINK_REGEX = /(discord\.gg\/|discord\.com\/invite\/)/i;
 
 module.exports = {
 	name: 'messageCreate',
 	async execute(_, message) {
 		if (message.author.bot) return;
+		const isStaffMessage = message.member.roles.cache.has(STAFF_ROLE_ID);
 
 		// Check for Discord invite links
-		if (INVITE_LINK_REGEX.test(message.content)) {
+		if (!isStaffMessage && INVITE_LINK_REGEX.test(message.content)) {
 			if (message.member.permissions.has(PermissionFlagsBits.Administrator)) return;
 
 			await message.delete().catch(console.error); // Delete the message

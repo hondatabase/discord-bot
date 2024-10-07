@@ -55,7 +55,7 @@ module.exports = {
                     description,
                     requester: requester.username,
                     likes: 0,
-                    status: 'pending',
+                    active: true,
                     assignedTo: [],
                     dateRequested: new Date().toISOString()
                 };

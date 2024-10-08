@@ -1,6 +1,6 @@
-const fs     = require('fs').promises;
-const path   = require('path');
-const { ARTICLE_REQUEST_CHANNEL_ID } = require('../config');
+const fs   = require('fs').promises;
+const path = require('path');
+const { ARTICLE_REQUEST_CHANNEL_ID, ARTICLE_REQUEST_CHANNEL_TOPARTICLES_MESSAGE_ID } = require('../config');
 
 module.exports = {
     name: 'messageReactionAdd',
@@ -35,7 +35,7 @@ module.exports = {
                 }
 
                 // Edit the "Top Articles" message, with the current top 5 articles
-                const topArticlesMessage = await reaction.message.channel.messages.fetch(process.env.ARTICLE_REQUEST_CHANNEL_TOPARTICLES_MESSAGE_ID);
+                const topArticlesMessage = await reaction.message.channel.messages.fetch(ARTICLE_REQUEST_CHANNEL_TOPARTICLES_MESSAGE_ID);
                 if (topArticlesMessage) {
                     try {
                         const data = await fs
@@ -47,7 +47,7 @@ module.exports = {
                             .sort((a, b) => b.likes - a.likes)
                             .slice(0, 5)
                             .map(a => `• '${a.description}' (${a.likes} likes)`);
-                        await topArticlesMessage.edit(`📚 **Top Articles** 📚\n${topArticles.join('\n')}\n\nUpdated: ${new Date().toLocaleString()} GMT`);
+                        await topArticlesMessage.edit(`📚 **Top Articles** 📚\n${topArticles.join('\n')}\n\nUpdated: ${new Date().toLocaleDateString()} `);
                     } catch (error) {
                         console.error('Error updating top articles:', error);
                     }

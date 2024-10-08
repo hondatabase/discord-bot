@@ -1,6 +1,9 @@
-// This command is responsible for searching for PDF files on the "pdf-manuals" GitHub repository (hondatabase/pdf-manuals)
-// and sending a list of matches to the user
+/*
+	This command is responsible for searching for PDF files on the "pdf-manuals" GitHub repository (hondatabase/pdf-manuals)
+	..and sending a list of matches to the user
+*/
 
+import path from 'path';
 import { Octokit } from '@octokit/rest';
 import { SlashCommandBuilder } from 'discord.js';
 
@@ -50,9 +53,9 @@ export async function execute(interaction) {
 
 	if (matches.length === 0) return interaction.reply({ content: 'No matches found.', ephemeral: true });
 
-	const fileList = matches.slice(0, 5).map(file => `[${file.split('.')[0]}](${GITHUB_ORG_URL}pdf-manuals/raw/main/${file})`).join('\n');
+	const fileList = matches.slice(0, 5).map(filePath => `[${path.basename(filePath).split('.')[0]}](${GITHUB_ORG_URL}pdf-manuals/raw/main/${filePath.replace(/ /g, '%20')})`).join('\n');
 
-	await interaction.reply(`Query: \`${query}\`\n${fileList}`);
+	await interaction.reply(`**PDFs that match**: \`${query}\`\n${fileList}`);
 }
 
 client.on('ready', () => {

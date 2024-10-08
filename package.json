@@ -1,8 +1,9 @@
 {
+  "type": "module",
   "dependencies": {
     "discord.js": "^14.16.2",
     "dotenv": "^16.4.5",
     "fs": "^0.0.1-security",
-    "moment-timezone": "^0.5.45"
+    "moment-timezone": "^0.5.45",
   }
 }

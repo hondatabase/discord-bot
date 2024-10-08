@@ -1,83 +1,78 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const fs = require('fs').promises;
-const path = require('path');
-const { STAFF_CHANNEL_ID, ARTICLE_REQUEST_CHANNEL_ID } = require('../config');
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { promises as fs } from 'fs';
+import { join } from 'path';
+import { STAFF_CHANNEL_ID, ARTICLE_REQUEST_CHANNEL_ID } from '../config.js';
 
-module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('request-article')
-        .setDescription('Request a new article')
-        .addStringOption(option =>
-            option.setName('category')
-                .setDescription('The category of the article')
-                .setRequired(true)
-                .addChoices(
-                    { name: 'Cars', value: 'cars' },
-                    { name: 'Bikes', value: 'bikes' },
-                    { name: 'Planes', value: 'planes' }
-                ))
-        .addStringOption(option =>
-            option.setName('description')
-                .setDescription('A description of the requested article')
-                .setRequired(true)),
+export const data = new SlashCommandBuilder()
+    .setName('request-article')
+    .setDescription('Request a new article')
+    .addStringOption(option => option.setName('category')
+        .setDescription('The category of the article')
+        .setRequired(true)
+        .addChoices(
+            { name: 'Cars', value: 'cars' },
+            { name: 'Bikes', value: 'bikes' },
+            { name: 'Planes', value: 'planes' }
+        ))
+    .addStringOption(option => option.setName('description')
+        .setDescription('A description of the requested article')
+        .setRequired(true));
+export async function execute(interaction) {
+    const category = interaction.options.getString('category');
+    const description = interaction.options.getString('description');
+    const requester = interaction.user;
 
-    execute: async (interaction) => {
-        const category    = interaction.options.getString('category');
-        const description = interaction.options.getString('description');
-        const requester   = interaction.user;
+    const staffChannel = interaction.client.channels.cache.get(STAFF_CHANNEL_ID);
+    if (!staffChannel) return interaction.reply({ content: 'Error: Staff channel not found.', ephemeral: true });
 
-        const staffChannel = interaction.client.channels.cache.get(STAFF_CHANNEL_ID);
-        if (!staffChannel) return interaction.reply({ content: 'Error: Staff channel not found.', ephemeral: true });
+    const staffMessage = await staffChannel.send(`New article request from **${requester}**:\n**Category**: ${category}\n**Description**: ${description}.`);
 
-        const staffMessage = await staffChannel.send(`New article request from **${requester}**:\n**Category**: ${category}\n**Description**: ${description}.`);
+    await staffMessage.react('✅');
+    await staffMessage.react('❌');
 
-        await staffMessage.react('✅');
-        await staffMessage.react('❌');
+    await interaction.reply({ content: 'Your article request has been submitted for approval.', ephemeral: true });
 
-        await interaction.reply({ content: 'Your article request has been submitted for approval.', ephemeral: true });
+    // Set up a collector for the staff's reaction
+    const filter = (reaction, user) => ['✅', '❌'].includes(reaction.emoji.name) && !user.bot;
+    const collector = staffMessage.createReactionCollector({ filter, max: 1, time: 24 * 60 * 60 * 1000 }); // 24 hours
 
-        // Set up a collector for the staff's reaction
-        const filter = (reaction, user) => ['✅', '❌'].includes(reaction.emoji.name) && !user.bot;
-        const collector = staffMessage.createReactionCollector({ filter, max: 1, time: 24 * 60 * 60 * 1000 }); // 24 hours
+    collector.on('collect', async (reaction, user) => {
+        if (reaction.emoji.name === '✅') {
+            const articleRequestChannel = interaction.client.channels.cache.get(ARTICLE_REQUEST_CHANNEL_ID);
+            if (!articleRequestChannel) return staffChannel.send('Error: Article request channel not found.');
 
-        collector.on('collect', async (reaction, user) => {
-            if (reaction.emoji.name === '✅') {
-                const articleRequestChannel = interaction.client.channels.cache.get(ARTICLE_REQUEST_CHANNEL_ID);
-                if (!articleRequestChannel) return staffChannel.send('Error: Article request channel not found.');
+            const requestMessage = await articleRequestChannel.send(`New article request:\nCategory: ${category}\nDescription: ${description}\nRequested by: ${requester}`);
+            await requestMessage.react('👍');
 
-                const requestMessage = await articleRequestChannel.send(`New article request:\nCategory: ${category}\nDescription: ${description}\nRequested by: ${requester}`);
-                await requestMessage.react('👍');
+            // Save to data/articles.json
+            await saveArticleRequest({
+                id: requestMessage.id,
+                category,
+                description,
+                requester: requester.username,
+                likes: 0,
+                active: true,
+                assignedTo: [],
+                dateRequested: new Date().toISOString()
+            });
 
-                // Save to data/articles.json
-                await saveArticleRequest({
-                    id: requestMessage.id,
-                    category,
-                    description,
-                    requester: requester.username,
-                    likes: 0,
-                    active: true,
-                    assignedTo: [],
-                    dateRequested: new Date().toISOString()
-                });
+            staffMessage.reply(`Article request approved by ${user}`);
+            interaction.followUp({ content: `Your article request for '${description}' has been approved and posted.`, ephemeral: true });
+        } else {
+            staffMessage.reply(`Article request rejected by ${user}.`);
+            interaction.followUp({ content: `Your article request for '${description}' has been rejected.`, ephemeral: true });
+        }
 
-                staffMessage.reply(`Article request approved by ${user}`);
-                interaction.followUp({ content: `Your article request for '${description}' has been approved and posted.`, ephemeral: true });
-            } else {
-                staffMessage.reply(`Article request rejected by ${user}.`);
-                interaction.followUp({ content: `Your article request for '${description}' has been rejected.`, ephemeral: true });
-            }
+        staffMessage.reactions.removeAll();
+    });
 
-            staffMessage.reactions.removeAll();
-        });
-
-        collector.on('end', collected => {
-            if (collected.size === 0) staffChannel.send(`No decision was made on the article request from ${requester} within 24 hours.`);
-        });
-    }
-};
+    collector.on('end', collected => {
+        if (collected.size === 0) staffChannel.send(`No decision was made on the article request from ${requester} within 24 hours.`);
+    });
+}
 
 async function saveArticleRequest(articleData) {
-    const filePath = path.join(__dirname, '..', 'data', 'articles.json');
+    const filePath = join(__dirname, '..', 'data', 'articles.json');
     try {
         let articles = [];
         try {

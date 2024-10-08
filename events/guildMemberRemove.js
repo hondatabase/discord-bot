@@ -1,17 +1,14 @@
-const formatDuration = require('../utils/formatDuration');
-const { STAFF_CHANNEL_ID } = require('../config');
+import formatDuration from '../utils/formatDuration.js';
+import { STAFF_CHANNEL_ID } from '../config.js';
 
-module.exports = {
-    name: 'guildMemberRemove',
-    async execute(client, member) {
-        const { user, guild, joinedAt } = member;
-        const username = user.username;
-        const staffChannel = guild.channels.cache.get(STAFF_CHANNEL_ID);
+export async function execute(client, member) {
+    const { user, guild, joinedAt } = member;
+    const username = user.username;
+    const staffChannel = guild.channels.cache.get(STAFF_CHANNEL_ID);
 
-        console.log(`Member left: ${username}`);
+    console.log(`Member left: ${username}`);
 
-        if (staffChannel) {
-            staffChannel.send(`👋 **Member left** 👋\nUsername: **${username}**\nStayed for: **${formatDuration(Date.now() - joinedAt)}**`);
-        }
+    if (staffChannel) {
+        staffChannel.send(`👋 **Member left** 👋\nUsername: **${username}**\nStayed for: **${formatDuration(Date.now() - joinedAt)}**`);
     }
-};
+}

@@ -1,9 +1,9 @@
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
-const fs = require('fs');
+import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import { readdirSync } from 'fs';
 
-require('dotenv').config();
+import { BOT_TOKEN } from './config.js';
 
-const client = new Client({ 
+export const client = new Client({ 
     intents: [
         GatewayIntentBits.Guilds, 
         GatewayIntentBits.GuildMembers, 
@@ -20,20 +20,17 @@ client.commands     = new Collection();
 client.guildInvites = new Collection();
 
 // Load command files
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
-for (const file of commandFiles) {
-    const command = require(`./commands/${file}`);
-    client.commands.set(command.data.name, command);
-}
+const commandFiles = readdirSync('./commands').filter(file => file.endsWith('.js'));
+for (const file of commandFiles) client.commands.set(file.split('.')[0], import(`./commands/${file}`));
 
 // Load events files
-const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
+const eventFiles = readdirSync('./events').filter(file => file.endsWith('.js'));
 for (const file of eventFiles) {
-    const event     = require(`./events/${file}`);
+    const event     = await import(`./events/${file}`);
     const eventName = file.split('.')[0];
 
     console.log(`Loading event: ${eventName}`);
     client.on(eventName, (...args) => event.execute(client, ...args));
 }
 
-client.login(process.env.DISCORD_BOT_TOKEN);
+client.login(BOT_TOKEN);

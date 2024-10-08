@@ -1,8 +1,5 @@
-const handleRoleChanges = require('../handlers/RoleChangeHandler');
+import handleRoleChanges from '../handlers/RoleChangeHandler.js';
 
-module.exports = {
-    name: 'guildMemberUpdate',
-    async execute(client, oldMember, newMember) {
-        handleRoleChanges(oldMember, newMember);
-    },
-};
+export async function execute(client, oldMember, newMember) {
+    handleRoleChanges(oldMember, newMember);
+}

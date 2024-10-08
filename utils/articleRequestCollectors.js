@@ -1,11 +1,9 @@
-const fs   = require('fs').promises;
-const path = require('path');
+import { promises as fs } from 'fs';
 
-const fileName = path.basename(__filename, '.js');
-const log = message => console.log(`[${fileName}] ${message}`);
+const log = message => console.log(`[articleRequestCollectors] ${message}`);
 
-module.exports = async channel => {
-    const filePath = path.join(__dirname, '..', 'data', 'articles.json');
+export default async channel => {
+    const filePath = './data/articles.json';
     
     try {
         const data     = await fs.readFile(filePath, 'utf8');

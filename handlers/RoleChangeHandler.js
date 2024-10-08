@@ -1,4 +1,4 @@
-const { HANGOUT_CHANNEL_ID, ADMIN_CHANNEL_ID } = require('../config');
+import { HANGOUT_CHANNEL_ID, STAFF_CHANNEL_ID } from '../config.js';
 
 const roleChangeQueue    = new Map();
 const roleChangeTimeouts = new Map();
@@ -48,7 +48,7 @@ function processImportantRoles(member, addedRoles, removedRoles) {
     const importantRemoved = Array.from(removedRoles).filter(role => importantRoles.includes(role));
 
     if (importantAdded.length > 0 || importantRemoved.length > 0) {
-        const adminChannel = member.guild.channels.cache.get(ADMIN_CHANNEL_ID);
+        const adminChannel = member.guild.channels.cache.get(STAFF_CHANNEL_ID);
         if (adminChannel) {
             let message = `🚨 **Important Role Change** 🚨\nUser: ${member.user.username}\n`;
             if (importantAdded.length > 0) message   += `Added: ${importantAdded.join(', ')}\n`;
@@ -77,7 +77,7 @@ function queueRoleChange(member, changes) {
 /**
  * Processes and filters the role changes between old and new member states.
  */
-module.exports = (oldMember, newMember) => {
+export default (oldMember, newMember) => {
     const addedRoles   = newMember.roles.cache.filter(role => !oldMember.roles.cache.has(role.id));
     const removedRoles = oldMember.roles.cache.filter(role => !newMember.roles.cache.has(role.id));
 

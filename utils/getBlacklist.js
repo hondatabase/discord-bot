@@ -1,8 +1,8 @@
-const fs = require('fs').promises;
-const path = require('path');
+import { promises as fs } from 'fs';
+import { join } from 'path';
 
-module.exports = async () => {
-    const blacklistPath = path.join(__dirname, '..', 'data', 'blacklist.json');
+export default async () => {
+    const blacklistPath = join(__dirname, '..', 'data', 'blacklist.json');
     try {
         const data = await fs.readFile(blacklistPath, 'utf8');
         return JSON.parse(data);

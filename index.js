@@ -11,7 +11,7 @@ const client = new Client({
         GatewayIntentBits.GuildPresences,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildMessageReactions,
-        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.MessageContent
     ],
     partials: ["MESSAGE", "CHANNEL", "REACTION", "GUILD_MEMBER"]
 });
@@ -29,8 +29,11 @@ for (const file of commandFiles) {
 // Load events files
 const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
 for (const file of eventFiles) {
-    const event = require(`./events/${file}`);
-    client.on(event.name, (...args) => event.execute(client, ...args));
+    const event     = require(`./events/${file}`);
+    const eventName = file.split('.')[0];
+
+    console.log(`Loading event: ${eventName}`);
+    client.on(eventName, (...args) => event.execute(client, ...args));
 }
 
 client.login(process.env.DISCORD_BOT_TOKEN);

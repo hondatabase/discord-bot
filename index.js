@@ -1,6 +1,5 @@
 import { Client, GatewayIntentBits, Collection } from 'discord.js';
 import { readdirSync } from 'fs';
-
 import { BOT_TOKEN } from './config.js';
 
 export const client = new Client({ 
@@ -19,18 +18,15 @@ export const client = new Client({
 client.commands     = new Collection();
 client.guildInvites = new Collection();
 
-// Load command files
-const commandFiles = readdirSync('./commands').filter(file => file.endsWith('.js'));
-for (const file of commandFiles) client.commands.set(file.split('.')[0], import(`./commands/${file}`));
+(async () => {
+    const commandFiles = readdirSync('./commands').filter(file => file.endsWith('.js'));
+    for (const file of commandFiles) client.commands.set(file.split('.')[0], await import(`./commands/${file}`));
 
-// Load events files
-const eventFiles = readdirSync('./events').filter(file => file.endsWith('.js'));
-for (const file of eventFiles) {
-    const event     = await import(`./events/${file}`);
-    const eventName = file.split('.')[0];
+    const eventFiles = readdirSync('./events').filter(file => file.endsWith('.js'));
+    for (const file of eventFiles) {
+        const event     = await import(`./events/${file}`);
+        const eventName = file.split('.')[0];
 
-    console.log(`Loading event: ${eventName}`);
-    client.on(eventName, (...args) => event.execute(client, ...args));
-}
-
-client.login(BOT_TOKEN);
+        client.on(eventName, (...args) => event.execute(client, ...args));
+    }
+})().then(() => client.login(BOT_TOKEN));

@@ -24,7 +24,6 @@ async function fetchPDFFiles(owner, repo, path = '') {
 
 			if (item.type === 'file' && item.name.endsWith('.pdf')) {
 				files.push(item.path);
-				console.log(item.path);
 			} else if (item.type === 'dir') {
 				const moarFiles = await fetchPDFFiles(owner, repo, item.path);
 				files = files.concat(moarFiles);
@@ -45,12 +44,12 @@ export const data = new SlashCommandBuilder()
 		.setRequired(true)
 	);
 export async function execute(interaction) {
-	const query = interaction.options.getString('query');
+	const query = interaction.options.getString('query').toLowerCase();
 
 	if (pdfFiles.length === 0) return interaction.reply({ content: 'I currently don\'t have access to GitHub. Try again later.', ephemeral: true });
 
-	const matches = pdfFiles.filter(file => file.includes(query));
-
+	const matches = pdfFiles.filter(file => file.toLowerCase().includes(query));
+	
 	if (matches.length === 0) return interaction.reply({ content: 'No matches found.', ephemeral: true });
 
 	const fileList = matches.slice(0, 5).map(filePath => `[${path.basename(filePath).split('.')[0]}](${GITHUB_ORG_URL}pdf-manuals/raw/main/${filePath.replace(/ /g, '%20')})`).join('\n');

@@ -44,17 +44,20 @@ export const data = new SlashCommandBuilder()
 		.setRequired(true)
 	);
 export async function execute(interaction) {
-	const query = interaction.options.getString('query').toLowerCase();
+	const query = interaction.options.getString('query').toLowerCase().split(' ');
 
 	if (pdfFiles.length === 0) return interaction.reply({ content: 'I currently don\'t have access to GitHub. Try again later.', ephemeral: true });
 
-	const matches = pdfFiles.filter(file => file.toLowerCase().includes(query));
-	
+	const matches = pdfFiles.filter(file => query.every(word => file.toLowerCase().includes(word)));
+
 	if (matches.length === 0) return interaction.reply({ content: 'No matches found.', ephemeral: true });
 
-	const fileList = matches.slice(0, 5).map(filePath => `[${path.basename(filePath).split('.')[0]}](${GITHUB_ORG_URL}pdf-manuals/raw/main/${filePath.replace(/ /g, '%20')})`).join('\n');
+	const fileList = matches.map(filePath => `[${path.basename(filePath).split('.')[0]}](${GITHUB_ORG_URL}pdf-manuals/raw/main/${filePath.replace(/ /g, '%20')})`).join('\n');
+	const prefix   = `**PDFs that match**: \`${query.join(' ')}\`\n`;
 
-	await interaction.reply(`**PDFs that match**: \`${query}\`\n${fileList}`);
+	if (prefix.length + fileList.length > 2000) return interaction.reply({ content: 'Too many matches found. Please refine your search.', ephemeral: true });
+
+	await interaction.reply(prefix + fileList);
 }
 
 client.on('ready', () => {
